@@ -68,20 +68,32 @@ typedef NS_ENUM(NSUInteger, LogLevel) {
     _logLevel = (LogLevel)[logLevelIndex integerValue];
     result(nil);
   } else if ([@"state" isEqualToString:call.method]) {
-    FlutterStandardTypedData *data = [self toFlutterData:[self toBluetoothStateProto:self->_centralManager.state]];
-    result(data);
+      if (@available(iOS 10.0, *)) {
+          FlutterStandardTypedData *data = [self toFlutterData:[self toBluetoothStateProto:self->_centralManager.state]];
+          result(data);
+      } else {
+          // Fallback on earlier versions
+      }
   } else if([@"isAvailable" isEqualToString:call.method]) {
-    if(self.centralManager.state != CBManagerStateUnsupported && self.centralManager.state != CBManagerStateUnknown) {
-      result(@(YES));
-    } else {
-      result(@(NO));
-    }
+      if (@available(iOS 10.0, *)) {
+          if(self.centralManager.state != CBManagerStateUnsupported && self.centralManager.state != CBManagerStateUnknown) {
+              result(@(YES));
+          } else {
+              result(@(NO));
+          }
+      } else {
+          // Fallback on earlier versions
+      }
   } else if([@"isOn" isEqualToString:call.method]) {
-    if(self.centralManager.state == CBManagerStatePoweredOn) {
-      result(@(YES));
-    } else {
-      result(@(NO));
-    }
+      if (@available(iOS 10.0, *)) {
+          if(self.centralManager.state == CBManagerStatePoweredOn) {
+              result(@(YES));
+          } else {
+              result(@(NO));
+          }
+      } else {
+          // Fallback on earlier versions
+      }
   } else if([@"startScan" isEqualToString:call.method]) {
     // Clear any existing scan results
     [self.scannedPeripherals removeAllObjects];
@@ -359,8 +371,12 @@ typedef NS_ENUM(NSUInteger, LogLevel) {
 //
 - (void)centralManagerDidUpdateState:(nonnull CBCentralManager *)central {
   if(_stateStreamHandler.sink != nil) {
-    FlutterStandardTypedData *data = [self toFlutterData:[self toBluetoothStateProto:self->_centralManager.state]];
-    self.stateStreamHandler.sink(data);
+      if (@available(iOS 10.0, *)) {
+          FlutterStandardTypedData *data = [self toFlutterData:[self toBluetoothStateProto:self->_centralManager.state]];
+          self.stateStreamHandler.sink(data);
+      } else {
+          // Fallback on earlier versions
+      }
   }
 }
 
@@ -543,7 +559,7 @@ typedef NS_ENUM(NSUInteger, LogLevel) {
   return data;
 }
 
-- (ProtosBluetoothState*)toBluetoothStateProto:(CBManagerState)state {
+- (ProtosBluetoothState*)toBluetoothStateProto:(CBManagerState)state  API_AVAILABLE(ios(10.0)){
   ProtosBluetoothState *result = [[ProtosBluetoothState alloc] init];
   switch(state) {
     case CBManagerStateResetting:
